@@ -1,0 +1,49 @@
+disableLog("getServerMoneyAvailable");
+disableLog("sleep");
+
+var cnt = hacknet.numNodes();
+var maxLevel = 255;
+var delay = 5000;
+
+
+function getNode(i) {
+    return hacknet.getNodeStats(i);
+}
+
+function getNodeLevel(i) {
+    return getNode(i).level;
+}
+
+function myMoney() {
+    return getServerMoneyAvailable("home");
+}
+
+function getNextToUpgradeLevel() {
+    var nextToUpgrade = -1;
+    var lowestLevel = 99999;
+    var currLevel = 0;
+    for (var i = 0; i < cnt; i++) {
+        currLevel = getNodeLevel(i);
+        if (currLevel < lowestLevel) {
+            lowestLevel = currLevel;
+            nextToUpgrade = i;
+        }
+    }
+    if (lowestLevel >= maxLevel) {
+        print("All nodes upgraded to level: " + maxLevel);
+        exit()
+    }
+    return nextToUpgrade;
+}
+
+
+while (true) {
+    var i = getNextToUpgradeLevel();
+    var cost = hacknet.getLevelUpgradeCost(i, 5);
+    while (myMoney() < cost) {
+        print("Need $" + cost + " | Have $" + myMoney());
+        sleep(delay);
+    }
+    res = hacknet.upgradeLevel(i, 5);
+    print(getNode(i).name + " upgraded to level: " + getNode(i).level)
+}

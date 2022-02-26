@@ -1,0 +1,24 @@
+{
+    "ignore": {
+        "weak": {
+            "threshhold": 0.5,
+            "all": true
+        },
+        "grow": {
+            "threshhold": 0.1,
+            "all": false
+        },
+        "hack": {
+            "threshhold": 1000000,
+            "all": false
+        },
+        "targetHost": [
+            "n00dles",
+            "max-hardware"
+        ],
+        "runningHost": [
+            "n00dles",
+            "home"
+        ]
+    }
+}

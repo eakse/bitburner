@@ -1,0 +1,147 @@
+disableLog("getServerMoneyAvailable");
+disableLog("sleep");
+
+var cnt = hacknet.numNodes();
+var maxLevel = 200;
+var maxCore = 16;
+var maxRam = 64;
+var delay = 5000;
+
+
+function waitMoney(node, upgradeType, need) {
+    print(node + " | " + upgradeType + " | Need " + nFormat(need, "($0.000a)") + " | Have " + nFormat(String(myMoney()), "($0.000a)"));
+    sleep(delay);
+}
+
+function getNode(i) {
+    return hacknet.getNodeStats(i);
+}
+
+function getNodeLevel(i) {
+    return getNode(i).level;
+}
+
+
+function getNodeRam(i) {
+    return getNode(i).ram;
+}
+
+
+function getNodeCores(i) {
+    return getNode(i).cores;
+}
+
+function myMoney() {
+    return getServerMoneyAvailable("home");
+}
+
+function getNextToUpgradeLevel(level) {
+    var nextToUpgrade = -1;
+    var lowestLevel = level;
+    var currLevel = 0;
+    for (var i = 0; i < cnt; i++) {
+        currLevel = getNodeLevel(i);
+        if (currLevel < lowestLevel) {
+            lowestLevel = currLevel;
+            nextToUpgrade = i;
+        }
+    }
+    return nextToUpgrade;
+}
+
+function getNextToUpgradeCore(level) {
+    var nextToUpgrade = -1;
+    var lowestCore = level;
+    var currCores = 0;
+    for (var i = 0; i < cnt; i++) {
+        currCores = getNodeCores(i);
+        if (currCores < lowestCore) {
+            lowestCore = currCores;
+            nextToUpgrade = i;
+        }
+    }
+    return nextToUpgrade;
+}
+
+
+function getNextToUpgradeRam(level) {
+    var nextToUpgrade = -1;
+    var lowestRam = level;
+    var currRam = 0;
+    for (var i = 0; i < cnt; i++) {
+        currRam = getNodeRam(i);
+        if (currRam < lowestRam) {
+            lowestRam = currRam;
+            nextToUpgrade = i;
+        }
+    }
+    return nextToUpgrade;
+}
+
+
+function upgradeRam(level) {
+    while (true) {
+        var i = getNextToUpgradeRam(level);
+        if (i == -1) {
+            print("All nodes upgraded to " + level + "GB RAM");
+            return;
+        } else {
+            var currNode = getNode(i);
+            var cost = hacknet.getRamUpgradeCost(i, 1);
+            while (myMoney() < cost) {
+                waitMoney(currNode.name, "RAM", cost);
+            }
+            res = hacknet.upgradeRam(i, 1);
+            print(currNode.name + " | Upgraded to RAM: " + getNode(i).ram);
+        }
+    }
+}
+
+function upgradeCores(level) {
+    while (true) {
+        var i = getNextToUpgradeCore(level);
+        if (i == -1) {
+            print("All nodes upgraded to " + level + " Cores.");
+            return;
+        } else {
+            var currNode = getNode(i);
+            var cost = hacknet.getCoreUpgradeCost(i, 1);
+            while (myMoney() < cost) {
+                waitMoney(currNode.name, "CPU", cost);
+            }
+            res = hacknet.upgradeCore(i, 1);
+            print(currNode.name + " | Upgraded to Cores: " + getNode(i).cores)
+        }
+    }
+}
+
+
+function upgradeLevels(level) {
+    while (true) {
+        var i = getNextToUpgradeLevel(level);
+        if (i == -1) {
+            print("All nodes upgraded to level " + level);
+            return;
+        } else {
+            var currNode = getNode(i);
+            var cost = hacknet.getLevelUpgradeCost(i, 5);
+            while (myMoney() < cost) {
+                waitMoney(currNode.name, "LVL", cost);
+            }
+            res = hacknet.upgradeLevel(i, 5);
+            print(currNode.name + " | Upgraded to level: " + getNode(i).level)
+        }
+    }
+}
+
+var qLevel = maxLevel / 4;
+var qRam = maxRam / 4;
+var qCore = maxCore / 4;
+
+
+for (var i = 1; i < 5; i++) {
+    print("Pass " + i + " of 4.");
+    upgradeLevels(qLevel * i);
+    upgradeRam(qRam * i);
+    upgradeCores(qCore * i);
+}
