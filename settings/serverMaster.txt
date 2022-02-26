@@ -1,4 +1,5 @@
 {
+    "drawHeight":  20,
     "ignore": {
         "weak": {
             "threshhold": 0.5,

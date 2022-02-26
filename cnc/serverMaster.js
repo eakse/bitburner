@@ -2,7 +2,7 @@
 * @param {NS} ns
 **/
 // import {  } from "../util.js";
-import { loadJSON, strToDict, dictToStr, portSettings, actStrings, getServerNamesMaxLength, tCh, pad, pad10 } from "./util.js"; //Import specific functions from script
+import { getTime, loadJSON, strToDict, dictToStr, portSettings, actStrings, getServerNamesMaxLength, tCh, pad, pad10 } from "./util.js"; //Import specific functions from script
 
 const logLocal = true;
 var nsGlobal = undefined;
@@ -18,6 +18,17 @@ const actionResultEmpty = {
 var messages = [];
 const settingsFile = "/settings/serverMaster.txt";
 var settings = {};
+var stats = {
+    "hack": {
+        "max": 0,
+        "maxRunningHost": "",
+        "maxTargetHost": "",
+        "total": 0
+    },
+    "server": {
+        "startTime": getTime()
+    }
+};
 
 
 function logThis(text) {
@@ -67,25 +78,38 @@ function logEmpty() {
     return `${time}${tCh.vs}${host}${tCh.vs}${target}${tCh.vs}${act}${tCh.vs}${res}`;
 }
 
-function drawTable(ns, height = 40) {
+function drawTable(ns) {
     ns.clearLog();
-    // let table = Array(height).fill(logEmpty());
     let table = [];
-    messages.slice(Math.max(messages.length - height, 0)).forEach(message => {
+    messages.slice(Math.max(messages.length - settings.drawHeight, 0)).forEach(message => {
         table.unshift(logLine(message));
     })
-    while (table.length < height) {
+    while (table.length < settings.drawHeight) {
         table.push(logEmpty())
     }
+    ns.print(getStatBlock(ns));
     ns.print(logHeader());
     ns.print(logSplitter());
     ns.print(table.join('\n'));
 }
 
 
+function getStatBlock(ns) {
+    return `
+START: ${pad10(stats.server.startTime)} | CURRENT: ${pad(getTime(), serverMaxLength-5)}
+MAX:   ${pad10(ns.nFormat(stats.hack.max, "(0.000a)"))} | BY: ${pad(stats.hack.maxRunningHost, serverMaxLength)} | ON: ${pad(stats.hack.maxTargetHost, serverMaxLength)}
+TOTAL: ${pad10(ns.nFormat(stats.hack.total, "(0.000a)"))} |
+`
+}
+
+
+
 function loadSettings() {
     settings = loadJSON(nsGlobal, settingsFile);
 }
+
+
+
 
 
 function messageFilter(message) {
@@ -105,6 +129,17 @@ function messageFilter(message) {
     ignore = ignore || settings.ignore.runningHost.includes(message.runningHost);
     ignore = ignore || settings.ignore.targetHost.includes(message.targetHost);
     return ignore
+}
+
+
+function processHack(message) {
+    stats.hack.total += parseInt(message.result);
+    // nsGlobal.tprint(`${message.result} | ${stats.hack.total}`);
+    if (parseInt(message.result) > parseInt(stats.hack.max)) {
+        stats.hack.max = message.result;
+        stats.hack.maxRunningHost = message.runningHost;
+        stats.hack.maxTargetHost = message.targetHost;
+    }
 }
 
 
@@ -146,13 +181,14 @@ export async function main(ns) {
         }
         if (!portHack.empty()) {
             let message = strToDict(portHack.read());
+            processHack(message);;
             if (!messageFilter(message)) {
                 messages.push(message)
             }
         }
-        if (len != messages.length) {
+        // if (len != messages.length) {
             drawTable(ns);
-        }
+        // }
         await ns.sleep(100);
     }
 
