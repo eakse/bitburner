@@ -26,9 +26,12 @@ var stats = {
         "total": 0
     },
     "server": {
-        "startTime": getTime()
+        "startTime": getTime(),
+        "startTimeUnix": Date.now()
     }
 };
+
+
 
 
 function logThis(text) {
@@ -95,10 +98,12 @@ function drawTable(ns) {
 
 
 function getStatBlock(ns) {
+    let average = stats.hack.total / ((Date.now() - stats.server.startTimeUnix) / 60000);
+    let runTime = (Date.now() - stats.server.startTimeUnix)/1000;
     return `
-START: ${pad10(stats.server.startTime)} | CURRENT: ${pad(getTime(), serverMaxLength-5)}
-MAX:   ${pad10(ns.nFormat(stats.hack.max, "(0.000a)"))} | BY: ${pad(stats.hack.maxRunningHost, serverMaxLength)} | ON: ${pad(stats.hack.maxTargetHost, serverMaxLength)}
-TOTAL: ${pad10(ns.nFormat(stats.hack.total, "(0.000a)"))} |
+START: ${pad10(stats.server.startTime)} | RUNTIME:    ${pad(ns.nFormat(runTime, '00:00:00'), serverMaxLength-5)} | CURRENT: ${pad(getTime(), serverMaxLength-5)}
+MAX:   ${pad10(ns.nFormat(stats.hack.max, "(0.000a)"))} | BY:    ${pad(stats.hack.maxRunningHost, serverMaxLength)} | ON: ${pad(stats.hack.maxTargetHost, serverMaxLength)}
+TOTAL: ${pad10(ns.nFormat(stats.hack.total, "(0.000a)"))} | PM:    ${pad(ns.nFormat(average, "(0.000a)"), serverMaxLength)} |
 `
 }
 
@@ -128,6 +133,8 @@ function messageFilter(message) {
     // nsGlobal.tprint(settings);
     ignore = ignore || settings.ignore.runningHost.includes(message.runningHost);
     ignore = ignore || settings.ignore.targetHost.includes(message.targetHost);
+    ignore = ignore && !settings.ignore.runningWhiteList.includes(message.runningHost);
+    ignore = ignore && !settings.ignore.targetWhiteList.includes(message.targetHost);
     return ignore
 }
 
@@ -139,6 +146,7 @@ function processHack(message) {
         stats.hack.max = message.result;
         stats.hack.maxRunningHost = message.runningHost;
         stats.hack.maxTargetHost = message.targetHost;
+        nsGlobal.toast(`New record --> Amount: ${nsGlobal.nFormat(message.result, "(0.000a)")} by ${message.runningHost} on ${message.targetHost}`, "info", 5000);
     }
 }
 

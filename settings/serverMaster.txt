@@ -1,24 +1,27 @@
 {
-    "drawHeight":  20,
+    "drawHeight":  30,
     "ignore": {
         "weak": {
             "threshhold": 0.5,
             "all": true
         },
         "grow": {
-            "threshhold": 0.1,
-            "all": false
+            "threshhold": 0.2,
+            "all": true
         },
         "hack": {
             "threshhold": 1000000,
             "all": false
         },
         "targetHost": [
-            "n00dles",
-            "max-hardware"
+            "n00dles"
         ],
         "runningHost": [
-            "n00dles",
+            "n00dles"
+        ],
+        "targetWhiteList": [
+        ],
+        "runningWhiteList": [
             "home"
         ]
     }

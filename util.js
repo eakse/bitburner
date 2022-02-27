@@ -6,6 +6,8 @@ var totalWidth = "SSL:  │ Thresh: ".length + (defWidth * 2) - 1;
 var splitter = Array(totalWidth).join("─");
 const splitChar = ";"; // CSV valid
 
+export const moneyThreshMult = 0.75;
+
 export const tCh = {
     "h": "─",
     "v": "│",
@@ -28,7 +30,7 @@ export const actStrings = {
 
 export function getTime() {
     return new Date().toLocaleTimeString('en-GB') //24h time format
-  }
+}
 
 export function pad(str, width) {
     let padstring = Array(width).join(" ");
@@ -73,20 +75,86 @@ export function shortTime(ns, time) {
 
 
 export function strToDict(str) {
+    return JSON.parse(str)
+    /* OLD FUNCTION
     let result = {};
     let splitStr = str.split(splitChar);
     for (let i = 0; i < splitStr.length; i += 2) {
         result[splitStr[i]] = splitStr[i + 1]
     }
     return result
+    */
 }
 
+export function pp(obj) {
+    return JSON.stringify(obj, null, 4)
+}
 
 export function dictToStr(dict) {
+    return JSON.stringify(dict)
+    /* OLD FUNCTION
     let result = "";
     for (const [key, value] of Object.entries(dict)) {
         result += `${key};${value};`;
     }
+    return result
+    */
+}
+
+
+export function serverToJSON(ns, serverName) {
+    let server = ns.getServer(serverName);
+    return {
+        "name": String(serverName),
+        "tGrow": Number(ns.getGrowTime(serverName)),
+        "tHack": Number(ns.getHackTime(serverName)),
+        "tWeak": Number(ns.getWeakenTime(serverName)),
+        "mAvail": Number(server.moneyAvailable),
+        "mMax": Number(server.moneyMax),
+        "mThresh": Number(server.moneyMax * moneyThreshMult),
+        "mGrowth": Number(server.serverGrowth),
+        "mEff": Number(server.moneyMax/ns.getHackTime(serverName)),
+        "rFree": Number(server.maxRam - server.ramUsed),
+        "rMax": Number(server.maxRam),
+        "rUsed": Number(server.ramUsed),
+        "sMin": Number(server.minDifficulty),
+        "sCurr": Number(server.hackDifficulty)
+    }
+}
+
+
+/** 
+ * 
+ * @param {bitburner ns} ns              Needed as it calls function within this NS
+ * @param {list}         serverNameList  A list of server names
+ * @returns {list}                       A list of servers as JSON
+ */
+export function serverListToJSON(ns, serverNameList) {
+    let result = [];
+    serverNameList.forEach(serverName => {
+        result.push(serverToJSON(ns, serverName))
+    })
+    return result
+}
+
+
+export function serverJSONLine(ns, serverJSON) {
+    let width = getServerNamesMaxLength(ns);
+    let result = `${pad(serverJSON.name, width)}`;
+    result += `${tCh.vs}${pad10(ns.nFormat(serverJSON.mAvail, "0.0a"))}`;
+    result += `${tCh.vs}${pad10(ns.nFormat(serverJSON.mThresh, "0.0a"))}`;
+    result += `${tCh.vs}${pad10(ns.nFormat(serverJSON.mMax, "0.0a"))}`;
+    result += `${tCh.vs}${pad5(serverJSON.mGrowth)}`;
+    result += `${tCh.vs}${pad(shortTime(ns, serverJSON.tHack), 6)}`;
+    result += `${tCh.vs}${pad(shortTime(ns, serverJSON.tGrow), 6)}`;
+    result += `${tCh.vs}${pad(shortTime(ns, serverJSON.tWeak), 6)}`;
+    result += `${tCh.vs}${pad(ns.nFormat(serverJSON.sMin, "0.0"), 6)}`;
+    result += `${tCh.vs}${pad(ns.nFormat(serverJSON.sCurr, "0.0"), 6)}`;
+    result += `${tCh.vs}${pad(ns.nFormat(serverJSON.rMax, "0.0"), 6)}`;
+    result += `${tCh.vs}${pad(ns.nFormat(serverJSON.rUsed, "0.0"), 6)}`;
+    result += `${tCh.vs}${pad(ns.nFormat(serverJSON.rFree, "0.0"), 6)}`;
+    result += `${tCh.vs}${pad(ns.nFormat(serverJSON.mEff, "0.0"), 10)}`;
+
     return result
 }
 
@@ -122,7 +190,7 @@ export function infoBlock(ns, server) {
     let hackDifficulty = server.hackDifficulty;
     let securityThresh = server.minDifficulty + 5;
     let moneyAvailable = server.moneyAvailable;
-    let moneyThresh = server.moneyMax * 0.75;
+    let moneyThresh = server.moneyMax * moneyThreshMult;
     let serverGrowth = server.serverGrowth;
     let maxRam = server.maxRam;
     let freeRam = ns.nFormat(server.maxRam - server.ramUsed, "0.0")
@@ -221,7 +289,7 @@ export function getServers(ns) {
 
 
 export function getAllServerNames(ns) {
-    var result = []
+    var result = [];
     getServers(ns).forEach(server => {
         result.push(server.name)
     })
@@ -230,9 +298,9 @@ export function getAllServerNames(ns) {
 
 
 export function getServerNamesMaxLength(ns) {
-    let result = 0
+    let result = 0;
     getAllServerNames(ns).forEach(serverName => {
-        result =  Math.max(result, serverName.length)
+        result = Math.max(result, serverName.length)
     })
     return result
 }

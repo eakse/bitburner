@@ -10,11 +10,11 @@ export async function main(ns) {
     ns.tprint(getServerInfo(ns, targetServer));
     let hl = ns.getHackingLevel();
     ns.tprint(hl);
-    var notHacked = new Array();
-    var hacked = new Array();
-    var notBackdoored = new Array();
-    var notBackdooredButHacked = new Array();
-    var freeRam = new Array();
+    var notHacked = Array();
+    var hacked = Array();
+    var notBackdoored = Array();
+    var notBackdooredButHacked = Array();
+    var freeRam = Array();
     getServers(ns).forEach(server => {
         let realServer = ns.getServer(server.name);
         if ((hl >= realServer.requiredHackingSkill)) { //&& (!realServer.purchasedByPlayer)
