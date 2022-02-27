@@ -73,9 +73,22 @@ export function shortTime(ns, time) {
     return `${timeArr[1]}:${timeArr[2]}`
 }
 
-
+/**
+ * 
+ * @param {String} str 
+ * @returns 
+ */
 export function strToDict(str) {
-    return JSON.parse(str)
+    if (str.includes(';')) {
+        let result = {};
+        let splitStr = str.split(splitChar);
+        for (let i = 0; i < splitStr.length; i += 2) {
+            result[splitStr[i]] = splitStr[i + 1]
+        }
+        return result
+    } else {
+        return JSON.parse(str)
+    }
     /* OLD FUNCTION
     let result = {};
     let splitStr = str.split(splitChar);
@@ -99,6 +112,27 @@ export function dictToStr(dict) {
     }
     return result
     */
+}
+
+
+/** 
+ * 
+ * @param {String} targetHost 
+ * @param {String} runningHost 
+ * @param {String} id 
+ * @param {String} act 
+ * @param {Number} result 
+ * @returns 
+ */
+export function createMessage(targetHost, runningHost, id, act, result) {
+    return dictToStr({
+        "targetHost": String(targetHost),
+        "runningHost": String(runningHost),
+        "id": String(id),
+        "act": String(act),
+        "result": Number(result),
+        "time": String (getTime())
+    });
 }
 
 
