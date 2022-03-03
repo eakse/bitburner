@@ -40,6 +40,8 @@ Response:
         } else {
             ns.tprint("No valid trade found.");
         }
+        ns.tprint(`${response}`);
+
     }
 
 }

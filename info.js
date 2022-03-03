@@ -5,6 +5,15 @@ import { getServerInfo, getServers, pad20, pad10, pad5, infoBlock, bigInfoBlock,
 
 
 export async function main(ns) {
+    let showBig = false;
+    if (ns.args.length > 0) {
+        if (ns.args.includes("big")) {
+            showBig = true;
+            ns.args = ns.args.filter(item => item !== "big")
+        }
+    }
+
+
     var targetServer = ns.args[0] || "silver-helix";
 
     ns.tprint(getServerInfo(ns, targetServer));
@@ -30,7 +39,7 @@ export async function main(ns) {
                 notBackdooredButHacked.push(server.name);
             }
             if (realServer.hasAdminRights && realServer.maxRam - realServer.ramUsed > 2) {
-                freeRam.push(`${pad20(server.name)} | ${pad10(ns.nFormat(realServer.maxRam - realServer.ramUsed, "0.000"))}`);
+                freeRam.push(`${pad20(server.name)} | ${pad20(ns.nFormat(realServer.maxRam - realServer.ramUsed, "0.00"))}`);
 
             };
 
@@ -49,9 +58,10 @@ RAM > 2GB available:
 `);
     var info = infoBlock(ns, ns.getServer(targetServer));
     ns.tprint(`\n${info.join('\n')}`);
-    var bigInfo = bigInfoBlock(ns, hacked);
-    ns.tprint("\n"+bigInfo);
-
+    if (showBig) {
+        var bigInfo = bigInfoBlock(ns, hacked);
+        ns.tprint("\n" + bigInfo);
+    }
     // var testDict = {
     //     "key1": "value1",
     //     "key2": "value2",

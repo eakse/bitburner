@@ -17,7 +17,7 @@ function getContractTable(contracts) {
     result.push(`${"Hostname".padEnd(hostnameMax)} │ ${"Filename".padEnd(filenameMax)} │ ${"Type".padEnd(typeMax)}`);
     result.push(`${"".padEnd(hostnameMax, "─")}─┼─${"".padEnd(filenameMax, "─")}─┼─${"".padEnd(typeMax, "─")}`);
     contracts.forEach(contract=>{
-        result.push(`${contract.hostname.padEnd(hostnameMax)} │ ${contract.filename.padEnd(filenameMax)} │ ${contract.type.padEnd(typeMax)}`);
+        result.push(`${contract.hostname.padEnd(hostnameMax)} │ ${contract.filename.padEnd(filenameMax)} │ ${contract.type.padEnd(typeMax)} | run solvers/${contract.type.replaceAll(" ", "_")}.js ${contract.hostname} ${contract.filename}`);
     });
     return result
 }

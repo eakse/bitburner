@@ -6,6 +6,7 @@ var totalWidth = "SSL:  │ Thresh: ".length + (defWidth * 2) - 1;
 var splitter = Array(totalWidth).join("─");
 const splitChar = ";"; // CSV valid
 
+
 export const moneyThreshMult = 0.75;
 
 export const tCh = {
@@ -16,10 +17,22 @@ export const tCh = {
     "cs": "─┼─"
 }
 
+// export const tCh = {
+//     "h": "═",
+//     "v": "║",
+//     "vs": " ║ ",
+//     "c": "╬",
+//     "cs": "═╬═"
+// }
+
+
 export const portSettings = {
+    "portEmptyString": "NULL PORT DATA",
     "weak": 5,
     "grow": 6,
-    "hack": 7
+    "hack": 7,
+    "stat": 3,
+    "aver": 4
 }
 
 export const actStrings = {
@@ -71,6 +84,21 @@ export function shortTime(ns, time) {
         timeArr[1] = timeArr[1][1]
     }
     return `${timeArr[1]}:${timeArr[2]}`
+}
+
+export function longTime(ns, time) {
+    var timeArr = String(ns.nFormat(time / 1000, "00:00")).split(":");
+    for (let i = 0; i < timeArr.length; i++) {
+        if (timeArr[i].length == 1) {
+            timeArr[i] = "0"+timeArr[i];
+        }
+    }
+    var result = "";
+    for (let i = 0; i < timeArr.length-1; i++) {
+        result = `${result}:${timeArr[i]}`
+    }
+    result += `:${timeArr[timeArr.length-1]}`;
+    return result.slice(1)
 }
 
 /**
@@ -172,6 +200,39 @@ export function serverListToJSON(ns, serverNameList) {
 }
 
 
+export function splitterFromHeader(header) {
+    let result = "";
+    header.split(tCh.v).forEach(item => {
+        result += Array(item.length+1).join(tCh.h) + tCh.c;
+    })
+    return result.slice(0, -1)
+}
+
+
+export function serverJSONheader(ns) {
+    let width = getServerNamesMaxLength(ns);
+    let result = `${pad("Server Name", width)}`;
+    result += `${tCh.vs}${pad10("$$$ AVAIL")}`;
+    result += `${tCh.vs}${pad10("$$$ TRESH")}`;
+    result += `${tCh.vs}${pad10("$$$ MAX")}`;
+    result += `${tCh.vs}${pad5("GROW")}`;
+    result += `${tCh.vs}${pad("tHACK", 6)}`;
+    result += `${tCh.vs}${pad("tGROW", 6)}`;
+    result += `${tCh.vs}${pad("tWEAK", 6)}`;
+    result += `${tCh.vs}${pad("sMIN", 6)}`;
+    result += `${tCh.vs}${pad("sCUR", 6)}`;
+    result += `${tCh.vs}${pad("rMAX", 6)}`;
+    result += `${tCh.vs}${pad("rUSED", 6)}`;
+    result += `${tCh.vs}${pad("rFREE", 6)}`;
+    result += `${tCh.vs}${pad("Effective", 10)}`;
+    result += "\n" + splitterFromHeader(result);
+    
+    return result
+}
+
+
+
+
 export function serverJSONLine(ns, serverJSON) {
     let width = getServerNamesMaxLength(ns);
     let result = `${pad(serverJSON.name, width)}`;
@@ -193,12 +254,13 @@ export function serverJSONLine(ns, serverJSON) {
 }
 
 
+
 export function contractSolverScriptInfo(ns) {
     let runningScript = ns.getRunningScript();
     let host = ns.args[0];
     let fileName = ns.args[1];
     let ccType = ns.codingcontract.getContractType(fileName, host);
-    let ccData = ns.codingcontract.getData(fileName, host);
+    let ccData = JSON.stringify(ns.codingcontract.getData(fileName, host));
     let ccTrys = ns.codingcontract.getNumTriesRemaining(fileName, host);
     let result = `
 ${Array(200).join("─")}
@@ -249,7 +311,7 @@ export function bigInfoBlock(ns, serverList) {
     // let size = `${columns*blockWidth} x ${rows*blockHeight}`
     // ns.tprint(columns + " " + rows);
     // ns.tprint(serverList.length/nrOfBlocks)
-    var infoBlocks = new Array();
+    var infoBlocks = Array();
 
     serverList.forEach(server => {
         let info = infoBlock(ns, server);
@@ -257,9 +319,9 @@ export function bigInfoBlock(ns, serverList) {
     })
     while (infoBlocks.length < rows * columns) {
         //  fill the block as I'm lazy
-        infoBlocks.push(new Array(blockHeight).fill(""));
+        infoBlocks.push(Array(blockHeight).fill(""));
     }
-    var result = new Array();
+    var result = Array();
     for (var cBase = 0; cBase < serverList.length; cBase += columns) {
         for (var cline = 0; cline < blockHeight; cline++) {
 

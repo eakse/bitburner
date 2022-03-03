@@ -2,7 +2,7 @@
 * @param {NS} ns
 **/
 // import {  } from "../util.js";
-import { getTime, loadJSON, strToDict, dictToStr, portSettings, actStrings, getServerNamesMaxLength, tCh, pad, pad10 } from "./util.js"; //Import specific functions from script
+import { splitterFromHeader, getTime, loadJSON, strToDict, dictToStr, portSettings, actStrings, getServerNamesMaxLength, tCh, pad, pad10 } from "./util.js"; //Import specific functions from script
 
 const logLocal = true;
 var nsGlobal = undefined;
@@ -59,7 +59,7 @@ function logLine(actionResult) {
 
 
 function logHeader() {
-    return logLine(actionResultEmpty);
+    return `${logLine(actionResultEmpty)}\n${splitterFromHeader(logLine(actionResultEmpty))}`;
 }
 
 function logSplitter() {
@@ -92,13 +92,14 @@ function drawTable(ns) {
     }
     ns.print(getStatBlock(ns));
     ns.print(logHeader());
-    ns.print(logSplitter());
     ns.print(table.join('\n'));
 }
 
 
 function getStatBlock(ns) {
     let average = stats.hack.total / ((Date.now() - stats.server.startTimeUnix) / 60000);
+    var portStat = ns.getPortHandle(portSettings.stat);
+    portStat.write(dictToStr({"mAverage": average}));
     let runTime = (Date.now() - stats.server.startTimeUnix)/1000;
     return `
 START: ${pad10(stats.server.startTime)} | RUNTIME:    ${pad(ns.nFormat(runTime, '00:00:00'), serverMaxLength-5)} | CURRENT: ${pad(getTime(), serverMaxLength-5)}
@@ -157,12 +158,15 @@ export async function main(ns) {
     ns.disableLog("scan");
     ns.clearLog();
     loadSettings();
+    ns.tail();
     serverMaxLength = getServerNamesMaxLength(ns);
     var portWeak = ns.getPortHandle(portSettings.weak);
     var portHack = ns.getPortHandle(portSettings.hack);
     var portGrow = ns.getPortHandle(portSettings.grow);
 
     // portHack.write("testing 123");;
+
+
 
 
     drawTable(ns);
@@ -174,7 +178,6 @@ export async function main(ns) {
             settingsReloadTimer = 0;
             loadSettings();
         }
-        let len = messages.length;
         if (!portGrow.empty()) {
             let message = strToDict(portGrow.read());
             if (!messageFilter(message)) {
@@ -194,9 +197,8 @@ export async function main(ns) {
                 messages.push(message)
             }
         }
-        // if (len != messages.length) {
-            drawTable(ns);
-        // }
+        drawTable(ns);
+
         await ns.sleep(100);
     }
 

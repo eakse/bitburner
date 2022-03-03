@@ -1,7 +1,7 @@
 /**
 * @param {NS} ns
 **/
-import { sort_by, serverJSONLine, serverListToJSON, serverToJSON, pp, getTime, getAllServerNames, getServerNamesMaxLength, pad } from "./util.js"; //Import specific functions from script
+import { shortTime, sort_by, serverJSONheader, serverJSONLine, serverListToJSON, serverToJSON, pp, getTime, getAllServerNames, getServerNamesMaxLength, pad } from "./util.js"; //Import specific functions from script
 
 
 const logLocal = true;
@@ -13,6 +13,7 @@ var copyList = [
     "/cnc/growSingle.js",
     "/cnc/weak.js",
     "/cnc/weakSingle.js",
+    "/cnc/weakAndGrow.js",
     "util.js",
     "y.js"
 ];
@@ -43,6 +44,29 @@ function finalize() {
 }
 
 
+async function growMax(targetHost) {
+    let req = await copyFiles(homeHostname, targetHost, copyList);
+    let serverInfo = serverToJSON(nsGlobal, targetHost);
+    let script = "/cnc/weakAndGrow.js";
+    let memNeeded = req[script];
+    let numThreads = Math.floor(serverInfo.rFree / memNeeded);
+    let PID = nsGlobal.exec(script, targetHost, numThreads);;
+    // let done = false;
+    while (nsGlobal.scriptRunning(script, targetHost)) {
+        await nsGlobal.sleep(500);
+    }
+    nsGlobal.tprint("Done growing")
+}
+
+
+async function testing123() {
+    let targetHost = "catalyst";
+    await growMax(targetHost);
+
+    nsGlobal.exit();
+}
+
+
 export async function main(ns) {
     nsGlobal = ns;
     targetServers = [];
@@ -52,8 +76,9 @@ export async function main(ns) {
     ns.disableLog("sleep");
     ns.disableLog("scan");
     ns.print(`Starting at: ${getTime()}`);
-    var targetHost = "42";
-    ramReqs = await copyFiles(homeHostname, targetHost, copyList);
+    // await testing123();
+    // var targetHost = "42";
+    // ramReqs = await copyFiles(homeHostname, targetHost, copyList);
 
     serverNamesMaxLength = getServerNamesMaxLength(ns);
     getAllServerNames(ns).forEach(serverName => {
@@ -76,12 +101,14 @@ Total running servers: ${pad(runningServers.length, 3)}
 
     // ns.tprint(pp(serverToJSON(ns, "rothman-uni")));
 
+    ns.print(serverJSONheader(ns));
     serverListToJSON(ns, targetServers).sort(sort_by("mEff", true, parseInt)).forEach(serverJSON => {
         ns.print(serverJSONLine(ns, serverJSON))
     })
 
 
-    var testData = serverListToJSON(ns, targetServers);
+
+    // var testData = serverListToJSON(ns, targetServers);
     // ns.print(pp(testData));
     // ns.print(copyList);
     // ns.print(pp(ramReqs));

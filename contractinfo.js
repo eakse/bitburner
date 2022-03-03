@@ -3,13 +3,13 @@ export async function main(ns) {
         ns.tprint("Need 2 positional arguments:\n  hostname\n  filename");
     } else {
 
-        let host = ns.args[0];
-        let fileName = ns.args[1];
+        var host = ns.args[0];
+        var fileName = ns.args[1];
         ns.tprint(`Running on ${host} for file: ${fileName}`);
 
         let ccType = await ns.codingcontract.getContractType(fileName, host);
-        let ccDesc = await ns.codingcontract.getDescription(fileName, host);
-        let ccData = await ns.codingcontract.getData(fileName, host);
+        let ccDesc = String(await ns.codingcontract.getDescription(fileName, host)).replace(/&nbsp;/g, " ");
+        let ccData = JSON.stringify(await ns.codingcontract.getData(fileName, host));
         let ccTrys = await ns.codingcontract.getNumTriesRemaining(fileName, host);
         ns.tprint(`
 ${host}/${fileName}
@@ -20,7 +20,7 @@ Details:
   Tries: ${ccTrys}
 `);
     }
-    // let done = await ns.codingcontract.attempt("[[1, 7], [9, 32]]", fileName, host, {"returnReward": true});
+    // let done = await ns.codingcontract.attempt("44,31,30,1,2,24,6,39,8", fileName, host, {"returnReward": true});
     // ns.tprint(done)
 
 }
