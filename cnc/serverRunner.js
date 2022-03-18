@@ -14,6 +14,7 @@ var copyList = [
     "/cnc/weak.js",
     "/cnc/weakSingle.js",
     "/cnc/weakAndGrow.js",
+    "/cnc/spamandeggs.js",
     "util.js",
     "y.js"
 ];
@@ -77,8 +78,8 @@ export async function main(ns) {
     ns.disableLog("scan");
     ns.print(`Starting at: ${getTime()}`);
     // await testing123();
-    // var targetHost = "42";
-    // ramReqs = await copyFiles(homeHostname, targetHost, copyList);
+    var targetHost = "primus";
+    ramReqs = await copyFiles(homeHostname, targetHost, copyList);
 
     serverNamesMaxLength = getServerNamesMaxLength(ns);
     getAllServerNames(ns).forEach(serverName => {
